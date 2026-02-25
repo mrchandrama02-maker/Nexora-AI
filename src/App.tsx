@@ -1118,20 +1118,21 @@ export default function App() {
         </section>
 
         {/* Filters */}
-        <div id="main-directory" className="flex flex-col md:flex-row gap-6 mb-8 items-end scroll-mt-20">
-          <div className="flex-1">
-            <label className="block text-xs font-semibold uppercase tracking-wider mb-2 opacity-60">Category</label>
-            <div className="flex flex-wrap gap-2">
+        <div id="main-directory" className="space-y-8 mb-12 scroll-mt-24">
+          {/* Categories Row */}
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-[0.2em] mb-4 opacity-40">Browse by Category</label>
+            <div className="flex overflow-x-auto gap-3 pb-4 no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 mask-fade-right">
               {categories.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  className={`px-6 py-2.5 rounded-2xl text-sm font-bold transition-all whitespace-nowrap flex-shrink-0 border-2 ${
                     selectedCategory === cat
-                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
+                      ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl shadow-indigo-600/20 scale-105'
                       : isDarkMode 
-                        ? 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800' 
-                        : 'bg-white text-zinc-600 border border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50'
+                        ? 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-zinc-200' 
+                        : 'bg-white text-zinc-500 border-zinc-100 hover:border-zinc-200 hover:text-zinc-800 shadow-sm'
                   }`}
                 >
                   {cat}
@@ -1140,72 +1141,73 @@ export default function App() {
             </div>
           </div>
 
-          <div className="md:w-64">
-            <label className="block text-xs font-semibold uppercase tracking-wider mb-2 opacity-60">Pricing</label>
-            <div className="flex gap-2">
-              {pricingOptions.map((price) => (
-                <button
-                  key={price}
-                  onClick={() => setSelectedPricing(price)}
-                  className={`flex-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                    selectedPricing === price
-                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
-                      : isDarkMode 
-                        ? 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800' 
-                        : 'bg-white text-zinc-600 border border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50'
-                  }`}
-                >
-                  {price}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="md:w-48">
-            <label className="block text-xs font-semibold uppercase tracking-wider mb-2 opacity-60">Sort By</label>
-            <div className="relative group">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className={`w-full appearance-none px-4 py-1.5 rounded-lg text-sm font-medium outline-none transition-all cursor-pointer border ${
-                  isDarkMode 
-                    ? 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-800' 
-                    : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50'
-                }`}
-              >
-                {['Most Popular', 'Highest Rated', 'Newest', 'Free First'].map((option) => (
-                  <option key={option} value={option}>{option}</option>
+          {/* Secondary Filters Row */}
+          <div className="flex flex-col md:flex-row gap-6 items-end">
+            <div className="w-full md:w-72">
+              <label className="block text-xs font-bold uppercase tracking-[0.2em] mb-3 opacity-40">Pricing</label>
+              <div className="flex p-1.5 rounded-2xl bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800">
+                {pricingOptions.map((price) => (
+                  <button
+                    key={price}
+                    onClick={() => setSelectedPricing(price)}
+                    className={`flex-1 px-4 py-2 rounded-xl text-xs font-black transition-all uppercase tracking-wider ${
+                      selectedPricing === price
+                        ? 'bg-white dark:bg-zinc-800 text-indigo-600 shadow-sm'
+                        : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                    }`}
+                  >
+                    {price}
+                  </button>
                 ))}
-              </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
-                <ChevronDown size={14} />
               </div>
             </div>
-          </div>
 
-          <div className="flex gap-4">
-            <button 
-              onClick={() => setShowVerifiedOnly(!showVerifiedOnly)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-bold border transition-all flex items-center gap-2 ${
-                showVerifiedOnly 
-                  ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-500' 
-                  : isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-500' : 'bg-white border-zinc-200 text-zinc-600'
-              }`}
-            >
-              <CheckCircle2 size={16} />
-              Verified
-            </button>
-            <button 
-              onClick={() => setShowDealsOnly(!showDealsOnly)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-bold border transition-all flex items-center gap-2 ${
-                showDealsOnly 
-                  ? 'bg-amber-500/10 border-amber-500/50 text-amber-500' 
-                  : isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-500' : 'bg-white border-zinc-200 text-zinc-600'
-              }`}
-            >
-              <Zap size={16} />
-              Deals
-            </button>
+            <div className="w-full md:w-56">
+              <label className="block text-xs font-bold uppercase tracking-[0.2em] mb-3 opacity-40">Sort By</label>
+              <div className="relative group">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as SortOption)}
+                  className={`w-full appearance-none px-5 py-3 rounded-2xl text-sm font-bold outline-none transition-all cursor-pointer border-2 ${
+                    isDarkMode 
+                      ? 'bg-zinc-900 text-zinc-300 border-zinc-800 focus:border-indigo-500/50' 
+                      : 'bg-white text-zinc-700 border-zinc-100 focus:border-indigo-600/30 shadow-sm'
+                  }`}
+                >
+                  {['Most Popular', 'Highest Rated', 'Newest', 'Free First'].map((option) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
+                  <ChevronDown size={18} />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 w-full md:w-auto">
+              <button 
+                onClick={() => setShowVerifiedOnly(!showVerifiedOnly)}
+                className={`flex-1 md:flex-none px-6 py-3 rounded-2xl text-sm font-bold border-2 transition-all flex items-center justify-center gap-2 ${
+                  showVerifiedOnly 
+                    ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-500 shadow-lg shadow-emerald-500/10' 
+                    : isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700' : 'bg-white border-zinc-100 text-zinc-500 hover:border-zinc-200 shadow-sm'
+                }`}
+              >
+                <CheckCircle2 size={18} />
+                Verified
+              </button>
+              <button 
+                onClick={() => setShowDealsOnly(!showDealsOnly)}
+                className={`flex-1 md:flex-none px-6 py-3 rounded-2xl text-sm font-bold border-2 transition-all flex items-center justify-center gap-2 ${
+                  showDealsOnly 
+                    ? 'bg-amber-500/10 border-amber-500/50 text-amber-500 shadow-lg shadow-amber-500/10' 
+                    : isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700' : 'bg-white border-zinc-100 text-zinc-500 hover:border-zinc-200 shadow-sm'
+                }`}
+              >
+                <Zap size={18} />
+                Deals
+              </button>
+            </div>
           </div>
         </div>
 
