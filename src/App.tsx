@@ -159,7 +159,7 @@ export default function App() {
   const [showDealsOnly, setShowDealsOnly] = useState(false);
   const [toasts, setToasts] = useState<{ id: string; message: string; type: 'success' | 'info' | 'error' }[]>([]);
   const [quickViewToolId, setQuickViewToolId] = useState<string | null>(null);
-  const TOOLS_PER_PAGE = 24;
+  const TOOLS_PER_PAGE = 10;
 
   const showToast = useCallback((message: string, type: 'success' | 'info' | 'error' = 'success') => {
     const id = Math.random().toString(36).substring(2, 9);
