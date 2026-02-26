@@ -1,4 +1,4 @@
-import { Category, Pricing, AITool } from './App';
+import { Category, Pricing, AITool } from './types';
 
 export const TOOLS_DATA: AITool[] = [
   // Chat AI
