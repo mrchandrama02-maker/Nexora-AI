@@ -595,25 +595,46 @@ export default function App() {
   // Firebase Auth Listener
   useEffect(() => {
     if (!isFirebaseConfigured) return;
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    
+    let unsubscribeDoc: (() => void) | null = null;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (unsubscribeDoc) {
+        unsubscribeDoc();
+        unsubscribeDoc = null;
+      }
+
       if (firebaseUser) {
-        // Fetch user data from Firestore
-        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-        if (userDoc.exists()) {
-          const data = userDoc.data();
-          setUserData(prev => ({
-            ...prev,
-            user: {
-              id: firebaseUser.uid,
-              name: data.name,
-              email: data.email,
-              avatar: firebaseUser.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.email}`,
-              role: data.role
-            },
-            favorites: data.favorites || [],
-            ratings: data.ratings || {}
-          }));
-        }
+        // Set basic user info immediately from Auth
+        setUserData(prev => ({
+          ...prev,
+          user: {
+            id: firebaseUser.uid,
+            name: firebaseUser.displayName || 'User',
+            email: firebaseUser.email || '',
+            avatar: firebaseUser.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${firebaseUser.email}`,
+            role: 'user' // Default role
+          }
+        }));
+
+        // Listen for real-time updates to the user document in Firestore
+        unsubscribeDoc = onSnapshot(doc(db, 'users', firebaseUser.uid), (docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            setUserData(prev => ({
+              ...prev,
+              user: {
+                id: firebaseUser.uid,
+                name: data.name || firebaseUser.displayName || 'User',
+                email: data.email || firebaseUser.email || '',
+                avatar: firebaseUser.photoURL || data.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.email}`,
+                role: data.role || 'user'
+              },
+              favorites: data.favorites || [],
+              ratings: data.ratings || {}
+            }));
+          }
+        });
       } else {
         setUserData({
           user: null,
@@ -625,7 +646,10 @@ export default function App() {
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeDoc) unsubscribeDoc();
+    };
   }, []);
 
   // Real-time Reviews Listener
