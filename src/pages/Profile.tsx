@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -9,14 +9,42 @@ import {
   IdCard, 
   CheckCircle2, 
   XCircle,
-  ArrowLeft
+  ArrowLeft,
+  RefreshCw,
+  Send
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const Profile: React.FC<{ isDarkMode: boolean }> = ({ isDarkMode }) => {
-  const { user, firebaseUser } = useAuth();
+const Profile: React.FC<{ isDarkMode: boolean, showToast: (msg: string, type?: any) => void }> = ({ isDarkMode, showToast }) => {
+  const { user, firebaseUser, refreshUser, resendVerification } = useAuth();
+  const [refreshing, setRefreshing] = useState(false);
+  const [sending, setSending] = useState(false);
 
   if (!user || !firebaseUser) return null;
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refreshUser();
+      showToast('Status refreshed!', 'info');
+    } catch (error: any) {
+      showToast(error.message || 'Failed to refresh status', 'error');
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const handleResend = async () => {
+    setSending(true);
+    try {
+      await resendVerification();
+      showToast('Verification email sent!', 'success');
+    } catch (error: any) {
+      showToast(error.message || 'Failed to send email', 'error');
+    } finally {
+      setSending(false);
+    }
+  };
 
   const creationDate = firebaseUser.metadata.creationTime 
     ? new Date(firebaseUser.metadata.creationTime).toLocaleDateString('en-US', {
@@ -101,19 +129,42 @@ const Profile: React.FC<{ isDarkMode: boolean }> = ({ isDarkMode }) => {
                         <span className="text-sm font-bold opacity-60">Verification</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        {firebaseUser.emailVerified ? (
+                        {user.emailVerified ? (
                           <>
                             <CheckCircle2 size={16} className="text-emerald-500" />
-                            <span className="text-sm font-bold text-emerald-500">Verified</span>
+                            <span className="text-sm font-bold text-emerald-500">Verified ✅</span>
                           </>
                         ) : (
                           <>
                             <XCircle size={16} className="text-rose-500" />
-                            <span className="text-sm font-bold text-rose-500">Unverified</span>
+                            <span className="text-sm font-bold text-rose-500">Unverified ❌</span>
                           </>
                         )}
                       </div>
                     </div>
+
+                    {!user.emailVerified && (
+                      <div className="flex flex-col gap-2 pt-2">
+                        <button 
+                          onClick={handleResend}
+                          disabled={sending}
+                          className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 transition-all disabled:opacity-50"
+                        >
+                          <Send size={14} />
+                          {sending ? 'Sending...' : 'Resend Verification Email'}
+                        </button>
+                        <button 
+                          onClick={handleRefresh}
+                          disabled={refreshing}
+                          className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl border text-xs font-bold transition-all disabled:opacity-50 ${
+                            isDarkMode ? 'border-zinc-800 hover:bg-zinc-800' : 'border-zinc-200 hover:bg-zinc-100'
+                          }`}
+                        >
+                          <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
+                          {refreshing ? 'Refreshing...' : 'Refresh Status'}
+                        </button>
+                      </div>
+                    )}
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">

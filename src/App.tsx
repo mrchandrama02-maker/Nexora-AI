@@ -50,7 +50,8 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   GithubAuthProvider,
-  updateProfile
+  updateProfile,
+  sendEmailVerification
 } from 'firebase/auth';
 import { 
   doc, 
@@ -110,8 +111,10 @@ const AuthModal = ({ isOpen, onClose, showToast }: { isOpen: boolean, onClose: (
           ratings: {},
           submittedTools: []
         });
+
+        await sendEmailVerification(userCredential.user);
         
-        showToast('Account created successfully!', 'success');
+        showToast('Account created! Verification email sent.', 'success');
       }
       onClose();
     } catch (error: any) {
@@ -306,6 +309,67 @@ const AuthModal = ({ isOpen, onClose, showToast }: { isOpen: boolean, onClose: (
         </div>
       )}
     </AnimatePresence>
+  );
+};
+
+const VerificationBanner = ({ showToast }: { showToast: (msg: string, type?: any) => void }) => {
+  const { user, resendVerification, refreshUser } = useAuth();
+  const [sending, setSending] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  if (!user || user.emailVerified) return null;
+
+  const handleResend = async () => {
+    setSending(true);
+    try {
+      await resendVerification();
+      showToast('Verification email resent!', 'success');
+    } catch (error: any) {
+      showToast(error.message || 'Failed to resend email', 'error');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refreshUser();
+      showToast('Status refreshed!', 'info');
+    } catch (error: any) {
+      showToast(error.message || 'Failed to refresh status', 'error');
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  return (
+    <motion.div 
+      initial={{ height: 0, opacity: 0 }}
+      animate={{ height: 'auto', opacity: 1 }}
+      className="bg-indigo-600 text-white px-4 py-3 text-sm font-bold flex flex-col sm:flex-row items-center justify-center gap-4"
+    >
+      <div className="flex items-center gap-2">
+        <Mail size={16} />
+        Please verify your email to unlock all features.
+      </div>
+      <div className="flex items-center gap-3">
+        <button 
+          onClick={handleResend}
+          disabled={sending}
+          className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg transition-colors disabled:opacity-50"
+        >
+          {sending ? 'Sending...' : 'Resend Email'}
+        </button>
+        <button 
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg transition-colors disabled:opacity-50"
+        >
+          {refreshing ? 'Refreshing...' : 'Refresh Status'}
+        </button>
+      </div>
+    </motion.div>
   );
 };
 
@@ -553,6 +617,11 @@ const AppContent = () => {
       return;
     }
 
+    if (!user.emailVerified) {
+      showToast('Please verify your email to save favorites', 'error');
+      return;
+    }
+
     const isFavorite = userData.favorites.includes(toolId);
     const favRef = doc(db, 'users', user.id, 'favorites', toolId);
     
@@ -616,6 +685,12 @@ const AppContent = () => {
       setShowAuthModal(true);
       return;
     }
+
+    if (!user.emailVerified) {
+      showToast('Please verify your email to submit tools', 'error');
+      return;
+    }
+
     if (!submissionForm.name || !submissionForm.url) {
       showToast('Please fill in all fields', 'error');
       return;
@@ -674,6 +749,8 @@ const AppContent = () => {
         </div>
       )}
 
+      <VerificationBanner showToast={showToast} />
+
       <Header 
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -700,7 +777,7 @@ const AppContent = () => {
         } />
         <Route path="/profile" element={
           <ProtectedRoute>
-            <Profile isDarkMode={isDarkMode} />
+            <Profile isDarkMode={isDarkMode} showToast={showToast} />
           </ProtectedRoute>
         } />
         <Route path="/favorites" element={

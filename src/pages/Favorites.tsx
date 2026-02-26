@@ -188,6 +188,11 @@ const Favorites: React.FC<FavoritesProps> = ({
                           <button 
                             onClick={(e) => {
                               e.stopPropagation();
+                              if (userData.user && !userData.user.emailVerified) {
+                                // This case shouldn't happen much since they already have favorites,
+                                // but if they unverify or we add this rule later, it's good to have.
+                                return;
+                              }
                               toggleFavorite(tool.id);
                             }}
                             className={`p-2 rounded-full transition-all ${

@@ -2,7 +2,8 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
   onAuthStateChanged, 
   signOut, 
-  User as FirebaseUser 
+  User as FirebaseUser,
+  sendEmailVerification
 } from 'firebase/auth';
 import { doc, onSnapshot, collection } from 'firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../firebase';
@@ -16,6 +17,7 @@ interface UserProfile {
   createdAt?: any;
   favorites: string[];
   ratings: Record<string, number>;
+  emailVerified: boolean;
 }
 
 interface AuthContextType {
@@ -23,6 +25,8 @@ interface AuthContextType {
   firebaseUser: FirebaseUser | null;
   loading: boolean;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
+  resendVerification: () => Promise<void>;
   isConfigured: boolean;
 }
 
@@ -63,7 +67,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           avatar: fUser.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${fUser.email}`,
           role: 'user',
           favorites: [],
-          ratings: {}
+          ratings: {},
+          emailVerified: fUser.emailVerified
         });
 
         // Listen for Firestore updates
@@ -77,7 +82,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               avatar: fUser.photoURL || data.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.email}`,
               role: data.role || 'user',
               createdAt: data.createdAt,
-              ratings: data.ratings || {}
+              ratings: data.ratings || {},
+              emailVerified: fUser.emailVerified
             }) : null);
           }
         }, (error) => {
@@ -114,8 +120,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await signOut(auth);
   };
 
+  const refreshUser = async () => {
+    if (!auth.currentUser) return;
+    await auth.currentUser.reload();
+    const updatedUser = auth.currentUser;
+    setFirebaseUser(updatedUser);
+    setUser(prev => prev ? ({
+      ...prev,
+      emailVerified: updatedUser.emailVerified
+    }) : null);
+  };
+
+  const resendVerification = async () => {
+    if (!auth.currentUser) return;
+    await sendEmailVerification(auth.currentUser);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, firebaseUser, loading, logout, isConfigured: isFirebaseConfigured }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      firebaseUser, 
+      loading, 
+      logout, 
+      refreshUser,
+      resendVerification,
+      isConfigured: isFirebaseConfigured 
+    }}>
       {children}
     </AuthContext.Provider>
   );

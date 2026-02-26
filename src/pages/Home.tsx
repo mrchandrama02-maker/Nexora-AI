@@ -362,6 +362,10 @@ const Home: React.FC<HomeProps> = ({
                           <button 
                             onClick={(e) => {
                               e.stopPropagation();
+                              if (userData.user && !userData.user.emailVerified) {
+                                showToast('Please verify your email to save favorites', 'error');
+                                return;
+                              }
                               toggleFavorite(tool.id);
                             }}
                             className={`p-2 rounded-full transition-all ${

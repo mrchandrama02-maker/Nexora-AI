@@ -9,7 +9,8 @@ import {
   Heart, 
   ChevronDown,
   LayoutDashboard,
-  Settings
+  Settings,
+  AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -108,8 +109,11 @@ const Header: React.FC<HeaderProps> = ({
                 onClick={() => setShowDropdown(!showDropdown)}
                 className="flex items-center gap-2 pl-2 border-l border-zinc-200 dark:border-zinc-800 group"
               >
-                <div className="w-9 h-9 rounded-xl overflow-hidden border-2 border-indigo-600/20 group-hover:border-indigo-600/50 transition-all">
+                <div className="w-9 h-9 rounded-xl overflow-hidden border-2 border-indigo-600/20 group-hover:border-indigo-600/50 transition-all relative">
                   <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                  {!user.emailVerified && (
+                    <div className="absolute top-0 right-0 w-3 h-3 bg-amber-500 border-2 border-white dark:border-zinc-950 rounded-full" />
+                  )}
                 </div>
                 <ChevronDown size={16} className={`transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''} opacity-40`} />
               </button>
@@ -125,7 +129,12 @@ const Header: React.FC<HeaderProps> = ({
                     }`}
                   >
                     <div className="p-4 border-b border-zinc-100 dark:border-zinc-800">
-                      <p className="text-sm font-black truncate">{user.name}</p>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-black truncate">{user.name}</p>
+                        {!user.emailVerified && (
+                          <AlertCircle size={14} className="text-amber-500 flex-shrink-0" />
+                        )}
+                      </div>
                       <p className="text-xs opacity-50 truncate">{user.email}</p>
                     </div>
                     <div className="p-2">
