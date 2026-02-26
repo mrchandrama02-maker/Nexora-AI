@@ -134,11 +134,6 @@ const Profile: React.FC<{ isDarkMode: boolean }> = ({ isDarkMode }) => {
                 
                 <div className={`p-6 rounded-3xl border ${isDarkMode ? 'bg-zinc-950/50 border-zinc-800' : 'bg-zinc-50 border-zinc-100'}`}>
                   <div className="space-y-4">
-                    <div>
-                      <div className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">User ID</div>
-                      <code className="text-xs font-mono break-all opacity-80">{user.id}</code>
-                    </div>
-                    
                     <button className="w-full py-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 text-sm font-bold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all">
                       Change Password
                     </button>
