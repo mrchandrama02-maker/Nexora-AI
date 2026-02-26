@@ -62,10 +62,12 @@ import {
   collection, 
   onSnapshot,
   addDoc,
+  deleteDoc,
   query,
   orderBy,
   limit,
-  Timestamp
+  Timestamp,
+  serverTimestamp
 } from 'firebase/firestore';
 
 // Types
@@ -105,7 +107,6 @@ const AuthModal = ({ isOpen, onClose, showToast }: { isOpen: boolean, onClose: (
           email,
           role: 'user',
           createdAt: Timestamp.now(),
-          favorites: [],
           ratings: {},
           submittedTools: []
         });
@@ -138,7 +139,6 @@ const AuthModal = ({ isOpen, onClose, showToast }: { isOpen: boolean, onClose: (
           email: user.email,
           role: 'user',
           createdAt: Timestamp.now(),
-          favorites: [],
           ratings: {},
           submittedTools: []
         });
@@ -554,22 +554,33 @@ const AppContent = () => {
     }
 
     const isFavorite = userData.favorites.includes(toolId);
-    const userRef = doc(db, 'users', user.id);
+    const favRef = doc(db, 'users', user.id, 'favorites', toolId);
     
     try {
       if (isFavorite) {
-        await updateDoc(userRef, {
-          favorites: arrayRemove(toolId)
-        });
+        await deleteDoc(favRef);
         showToast('Removed from favorites', 'info');
       } else {
-        await updateDoc(userRef, {
-          favorites: arrayUnion(toolId)
+        const tool = TOOLS_DATA.find(t => t.id === toolId);
+        if (!tool) return;
+
+        await setDoc(favRef, {
+          toolId: tool.id,
+          name: tool.name,
+          category: tool.category,
+          pricing: tool.pricing,
+          image: tool.logo,
+          createdAt: serverTimestamp()
         });
         showToast('Added to favorites!', 'success');
       }
-    } catch (error) {
-      showToast('Failed to update favorites', 'error');
+    } catch (error: any) {
+      console.error("Error updating favorites:", error);
+      if (error.code === 'permission-denied') {
+        showToast('Permission denied. Please check your account.', 'error');
+      } else {
+        showToast('Failed to update favorites', 'error');
+      }
     }
   };
 
@@ -699,6 +710,9 @@ const AppContent = () => {
               toggleFavorite={toggleFavorite}
               setSelectedToolId={setSelectedToolId}
               getToolStats={getToolStats}
+              handleShare={handleShare}
+              toggleCompare={toggleCompare}
+              compareList={compareList}
             />
           </ProtectedRoute>
         } />

@@ -4,7 +4,7 @@ import {
   signOut, 
   User as FirebaseUser 
 } from 'firebase/auth';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, collection } from 'firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../firebase';
 
 interface UserProfile {
@@ -40,6 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     let unsubscribeDoc: (() => void) | null = null;
+    let unsubscribeFavs: (() => void) | null = null;
 
     const unsubscribeAuth = onAuthStateChanged(auth, (fUser) => {
       setFirebaseUser(fUser);
@@ -47,6 +48,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (unsubscribeDoc) {
         unsubscribeDoc();
         unsubscribeDoc = null;
+      }
+      if (unsubscribeFavs) {
+        unsubscribeFavs();
+        unsubscribeFavs = null;
       }
 
       if (fUser) {
@@ -65,20 +70,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         unsubscribeDoc = onSnapshot(doc(db, 'users', fUser.uid), (docSnap) => {
           if (docSnap.exists()) {
             const data = docSnap.data();
-            setUser({
-              id: fUser.uid,
+            setUser(prev => prev ? ({
+              ...prev,
               name: data.name || fUser.displayName || 'User',
               email: data.email || fUser.email || '',
               avatar: fUser.photoURL || data.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.email}`,
               role: data.role || 'user',
               createdAt: data.createdAt,
-              favorites: data.favorites || [],
               ratings: data.ratings || {}
-            });
+            }) : null);
           }
+        }, (error) => {
+          console.error("Firestore user error:", error);
+        });
+
+        // Listen for Favorites subcollection
+        unsubscribeFavs = onSnapshot(collection(db, 'users', fUser.uid, 'favorites'), (snapshot) => {
+          const favIds = snapshot.docs.map(doc => doc.id);
+          setUser(prev => prev ? ({
+            ...prev,
+            favorites: favIds
+          }) : null);
           setLoading(false);
         }, (error) => {
-          console.error("Firestore error:", error);
+          console.error("Firestore favorites error:", error);
           setLoading(false);
         });
       } else {
@@ -90,6 +105,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       unsubscribeAuth();
       if (unsubscribeDoc) unsubscribeDoc();
+      if (unsubscribeFavs) unsubscribeFavs();
     };
   }, []);
 
