@@ -19,7 +19,10 @@ import {
   Users,
   BarChart3,
   Mail,
-  ExternalLink
+  ExternalLink,
+  Heart,
+  ThumbsUp,
+  Share2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
@@ -915,6 +918,184 @@ const AppContent = () => {
                         Visit Website
                         <ExternalLink size={18} />
                       </a>
+                    </div>
+                  </div>
+                );
+              })()}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Full Details Modal */}
+      <AnimatePresence>
+        {selectedToolId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6"
+          >
+            <div className="absolute inset-0 bg-zinc-950/80 backdrop-blur-md" onClick={() => setSelectedToolId(null)} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 40 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 40 }}
+              className={`relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[3rem] border shadow-2xl ${
+                isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-100'
+              }`}
+            >
+              <button 
+                onClick={() => setSelectedToolId(null)}
+                className="absolute top-8 right-8 p-3 rounded-full hover:bg-zinc-500/10 transition-colors z-10"
+              >
+                <X size={28} />
+              </button>
+
+              {(() => {
+                const tool = TOOLS_DATA.find(t => t.id === selectedToolId);
+                if (!tool) return null;
+                return (
+                  <div className="p-8 sm:p-16">
+                    <div className="flex flex-col md:flex-row gap-12 mb-12">
+                      <div className="w-48 h-48 rounded-[3rem] overflow-hidden border-8 border-white dark:border-zinc-800 shadow-2xl flex-shrink-0 mx-auto md:mx-0">
+                        <ToolLogo src={tool.logo} name={tool.name} className="w-full h-full" />
+                      </div>
+                      <div className="flex-1 text-center md:text-left">
+                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-6">
+                          <span className="px-4 py-1.5 rounded-full bg-indigo-500/10 text-indigo-500 text-xs font-black uppercase tracking-widest">{tool.category}</span>
+                          {tool.isVerified && (
+                            <span className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-500 text-xs font-black uppercase tracking-widest">
+                              <CheckCircle2 size={14} />
+                              Verified Tool
+                            </span>
+                          )}
+                        </div>
+                        <h2 className="text-5xl font-black mb-4 tracking-tight leading-none">{tool.name}</h2>
+                        <div className="flex items-center justify-center md:justify-start gap-4 mb-8">
+                          <div className="flex items-center gap-2">
+                            <Star size={20} className="text-yellow-400" fill="currentColor" />
+                            <span className="text-xl font-black">{getToolStats(tool.id).rating}</span>
+                          </div>
+                          <span className="text-sm opacity-40 font-bold uppercase tracking-widest">Based on {getToolStats(tool.id).count} user reviews</span>
+                        </div>
+                        <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+                          <a 
+                            href={tool.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20 flex items-center gap-2"
+                          >
+                            Visit Official Website
+                            <ExternalLink size={20} />
+                          </a>
+                          <button 
+                            onClick={() => toggleFavorite(tool.id)}
+                            className={`px-8 py-4 rounded-2xl font-black border transition-all flex items-center gap-2 ${
+                              userData.favorites.includes(tool.id)
+                                ? 'bg-pink-500/10 border-pink-500/20 text-pink-500'
+                                : isDarkMode ? 'border-zinc-800 hover:bg-zinc-800' : 'border-zinc-200 hover:bg-zinc-50'
+                            }`}
+                          >
+                            <Heart size={20} fill={userData.favorites.includes(tool.id) ? "currentColor" : "none"} />
+                            {userData.favorites.includes(tool.id) ? 'Saved to Favorites' : 'Save to Favorites'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                      <div className="lg:col-span-2 space-y-12">
+                        <section>
+                          <h3 className="text-2xl font-black mb-6 flex items-center gap-3">
+                            <Info className="text-indigo-600" />
+                            About {tool.name}
+                          </h3>
+                          <p className={`text-xl leading-relaxed ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                            {tool.description}
+                          </p>
+                        </section>
+
+                        <section className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                          <div className={`p-8 rounded-[2.5rem] border ${isDarkMode ? 'bg-zinc-950/50 border-zinc-800' : 'bg-emerald-50 border-emerald-100'}`}>
+                            <h4 className="text-lg font-black mb-6 text-emerald-600 flex items-center gap-2">
+                              <ThumbsUp size={20} />
+                              Pros
+                            </h4>
+                            <ul className="space-y-4">
+                              {tool.pros?.map((pro, i) => (
+                                <li key={i} className="flex items-start gap-3 text-sm font-bold opacity-80">
+                                  <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0 mt-0.5" />
+                                  {pro}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div className={`p-8 rounded-[2.5rem] border ${isDarkMode ? 'bg-zinc-950/50 border-zinc-800' : 'bg-rose-50 border-rose-100'}`}>
+                            <h4 className="text-lg font-black mb-6 text-rose-600 flex items-center gap-2">
+                              <XCircle size={20} />
+                              Cons
+                            </h4>
+                            <ul className="space-y-4">
+                              {tool.cons?.map((con, i) => (
+                                <li key={i} className="flex items-start gap-3 text-sm font-bold opacity-80">
+                                  <XCircle size={16} className="text-rose-500 flex-shrink-0 mt-0.5" />
+                                  {con}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </section>
+
+                        <section>
+                          <h3 className="text-2xl font-black mb-6">Key Features</h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {tool.features?.map((feature, i) => (
+                              <div key={i} className={`p-6 rounded-2xl border flex items-center gap-4 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-100 shadow-sm'}`}>
+                                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center flex-shrink-0">
+                                  <Zap size={20} />
+                                </div>
+                                <span className="font-bold">{feature}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </section>
+                      </div>
+
+                      <div className="space-y-8">
+                        <div className={`p-8 rounded-[2.5rem] border ${isDarkMode ? 'bg-zinc-950/50 border-zinc-800' : 'bg-zinc-50 border-zinc-100'}`}>
+                          <h4 className="text-xs font-black uppercase tracking-widest opacity-40 mb-6">Pricing Details</h4>
+                          <div className="space-y-6">
+                            <div>
+                              <div className="text-2xl font-black text-indigo-600 mb-1">{tool.pricing}</div>
+                              <div className="text-sm font-bold opacity-60">{tool.pricingDetails || 'Standard industry pricing'}</div>
+                            </div>
+                            <div className="pt-6 border-t border-zinc-200 dark:border-zinc-800">
+                              <div className="text-xs font-black uppercase tracking-widest opacity-40 mb-3">Best For</div>
+                              <div className="flex flex-wrap gap-2">
+                                {tool.useCases?.map((useCase, i) => (
+                                  <span key={i} className="px-3 py-1 rounded-lg bg-zinc-500/10 text-[10px] font-black uppercase tracking-widest">
+                                    {useCase}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className={`p-8 rounded-[2.5rem] border ${isDarkMode ? 'bg-zinc-950/50 border-zinc-800' : 'bg-zinc-50 border-zinc-100'}`}>
+                          <h4 className="text-xs font-black uppercase tracking-widest opacity-40 mb-6">Tags</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {tool.tags?.map((tag, i) => (
+                              <span key={i} className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${
+                                isDarkMode ? 'bg-zinc-800 text-zinc-400' : 'bg-white border border-zinc-200 text-zinc-500'
+                              }`}>
+                                #{tag}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 );
